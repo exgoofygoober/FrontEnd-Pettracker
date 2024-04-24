@@ -1,19 +1,19 @@
-import { Card, Container, Row } from "react-bootstrap";
-import React, { useState, useEffect } from "react";
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Card, Container, Row, Table } from "react-bootstrap";
 
-function TampilanHome() {
+function History() {
   return (
     <Container>
-      <h1 className="judul text-center">Kandang Sapi</h1>
-      <div className="tampilanhome mb-5">
+      <h1 className="judul text-center">Data Lora</h1>
+      <div className=" mb-5">
         <DataTabel />
       </div>
     </Container>
   );
 }
 
-export default TampilanHome;
+export default History;
 
 export function DataTabel() {
   const [sensorData, setSensorData] = useState([]);
@@ -22,7 +22,7 @@ export function DataTabel() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://grafikserver.vercel.app/ambilDataKandangSapi"
+          "https://lora-server.vercel.app/lora/dataLora"
         );
         setSensorData(response.data);
       } catch (error) {
@@ -31,10 +31,6 @@ export function DataTabel() {
     };
 
     fetchData();
-
-    const interval = setInterval(fetchData, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -44,42 +40,38 @@ export function DataTabel() {
           <div class="product-catagory-wrap">
             <Container>
               <Card className="mb-3 catagory-card">
-                <table className="table table-bordered">
+                <Table responsive bordered>
                   <thead>
                     <tr>
                       <th scope="col">No</th>
-                      <th scope="col">Temperature</th>
-                      <th scope="col">Humidity</th>
-                      <th scope="col">NH3</th>
+                      <th scope="col">GPS Data</th>
+                      <th scope="col">RSSI</th>
                       <th scope="col">Tanggal</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sensorData.map((data, index) => (
                       <tr key={index}>
-                        <td>{index + 1}</td>
+                        {/* <td>{index + 1}</td> */}
                         <td>
-                          {data.suhu !== null
-                            ? data.suhu.toFixed(0) + " C"
-                            : "NaN"}
+                          {data.loraData && data.loraData.includes("GPS Data:")
+                            ? data.loraData
+                                .split("GPS Data:")[0]
+                                .trim()
+                                .replace(/,/g, "")
+                            : data.loraData}
                         </td>
                         <td>
-                          {data.kelembaban !== null
-                            ? data.kelembaban.toFixed(0) + " %"
-                            : "NaN"}
+                          {data.loraData && data.loraData.includes("GPS Data:")
+                            ? data.loraData.split(",")[1]?.trim()?.substring(10)
+                            : "Unknown"}
                         </td>
-                        <td>
-                          {data.NH3 !== null ? data.NH3.toFixed(0) : "NaN"}
-                        </td>
-                        <td>
-                          {data.createdAt !== null
-                            ? new Date(data.createdAt).toLocaleString()
-                            : "NaN"}
-                        </td>
+                        <td>{data.rssiString}</td>
+                        <td>{new Date(data.createdAt).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </Table>
               </Card>
             </Container>
           </div>
