@@ -44,7 +44,8 @@ export function DataTabel() {
                   <thead>
                     <tr>
                       <th scope="col">No</th>
-                      <th scope="col">GPS Data</th>
+                      <th scope="col">Latitude</th>
+                      <th scope="col">Longitude</th>
                       <th scope="col">RSSI</th>
                       <th scope="col">Tanggal</th>
                     </tr>
@@ -61,11 +62,8 @@ export function DataTabel() {
                                 .replace(/,/g, "")
                             : data.loraData}
                         </td>
-                        <td>
-                          {data.loraData && data.loraData.includes("GPS Data:")
-                            ? data.loraData.split(",")[1]?.trim()?.substring(10)
-                            : "Unknown"}
-                        </td>
+                        <td>{getLatitude(data)}</td>
+                        <td>{getLongitude(data)}</td>
                         <td>{data.rssiString}</td>
                         <td>{new Date(data.createdAt).toLocaleString()}</td>
                       </tr>
@@ -79,4 +77,29 @@ export function DataTabel() {
       </div>
     </Row>
   );
+}
+
+
+function getLatitude(data) {
+  if (data.loraData && data.loraData.includes("GPS Data:")) {
+    return data.loraData
+      .split("GPS Data:")[1]
+      .split(",")[0]
+      .trim()
+      .replace(/,/g, "");
+  } else {
+    return "Unknown";
+  }
+}
+
+function getLongitude(data) {
+  if (data.loraData && data.loraData.includes("GPS Data:")) {
+    return data.loraData
+      .split("GPS Data:")[1]
+      .split(",")[1]
+      .trim()
+      .replace(/,/g, "");
+  } else {
+    return "Unknown";
+  }
 }
