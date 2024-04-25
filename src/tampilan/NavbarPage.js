@@ -17,6 +17,12 @@ const NavbarPage = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto right">
             <Nav.Link
+              href="/home"
+              style={{ color: "black", fontWeight: "bold" }}
+            >
+              Map
+            </Nav.Link>
+            <Nav.Link
               href="/history"
               style={{ color: "black", fontWeight: "bold" }}
             >

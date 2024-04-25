@@ -23,30 +23,36 @@ export function DataTabel() {
   const [sensorData, setSensorData] = useState([]);
   const [mapInitialized, setMapInitialized] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          "https://lora-server.vercel.app/lora/dataLora?limit=30"
-        );
-        setSensorData(response.data);
-      } catch (error) {
-        console.error("Error fetching sensor data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const parseGPSData = (loraData) => {
-    const gpsIndex = loraData.indexOf("GPS Data:");
-    if (gpsIndex !== -1) {
-      const gpsString = loraData.substring(gpsIndex + 10).trim();
-      const [latitude, longitude] = gpsString.split(",");
-      return { latitude, longitude };
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(
+        "https://backend-pettracker.vercel.app/lora/dataLora?limit=30"
+      );
+      setSensorData(response.data);
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+      setSensorData([]);
     }
-    return { latitude: "NaN", longitude: "NaN" };
   };
+
+  fetchData();
+}, []);
+
+
+
+const parseGPSData = (loraData) => {
+  const gpsIndex = loraData.indexOf("GPS Data:");
+  if (gpsIndex !== -1) {
+    const gpsString = loraData.substring(gpsIndex + 10).trim();
+    const [latitude, longitude, datetime] = gpsString.split(",");
+    const parsedDate = new Date(datetime).toLocaleString(); 
+    return { latitude, longitude, datetime: parsedDate };
+  }
+  return { latitude: "NaN", longitude: "NaN", datetime: "Invalid" };
+};
+
+
 
   useEffect(() => {
     if (!mapInitialized && sensorData.length > 0) {
@@ -76,7 +82,9 @@ export function DataTabel() {
           ).addTo(map);
 
           marker.bindPopup(
-            `Latitude: ${gps.latitude}<br>Longitude: ${gps.longitude}`
+            `Latitude: ${gps.latitude}<br>Longitude: ${
+              gps.longitude
+            }<br>Date & Time: ${new Date(data.createdAt).toLocaleString()}`
           );
         }
       });
