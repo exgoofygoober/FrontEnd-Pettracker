@@ -2,14 +2,14 @@ import axios from "axios";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import React, { useEffect, useState } from "react";
-import { Card, Container, Row } from "react-bootstrap";
+import { Button, Card, Container, Row } from "react-bootstrap";
 
 import blueMarkerIcon from "../assets/images.jpeg";
 
 function Home() {
   return (
     <Container>
-      <h1 className="judul text-center">Map Lora</h1>
+      <h2 className="judul text-center">Pet Tracker</h2>
       <div className=" mb-5">
         <DataTabel />
       </div>
@@ -23,36 +23,33 @@ export function DataTabel() {
   const [sensorData, setSensorData] = useState([]);
   const [mapInitialized, setMapInitialized] = useState(false);
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(
-        "https://backend-pettracker.vercel.app/lora/dataLora?limit=30"
-      );
-      setSensorData(response.data);
-    } catch (error) {
-      console.error("Error fetching sensor data:", error);
-      setSensorData([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/lora/limitLora?limit=2"
+        );
+        setSensorData(response.data);
+        console.log("Total data yang terambil:", response.data.length);
+      } catch (error) {
+        console.error("Error fetching sensor data:", error);
+        setSensorData([]);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const parseGPSData = (loraData) => {
+    const gpsIndex = loraData.indexOf("GPS Data:");
+    if (gpsIndex !== -1) {
+      const gpsString = loraData.substring(gpsIndex + 10).trim();
+      const [latitude, longitude, datetime] = gpsString.split(",");
+      const parsedDate = new Date(datetime).toLocaleString();
+      return { latitude, longitude, datetime: parsedDate };
     }
+    return { latitude: "NaN", longitude: "NaN", datetime: "Invalid" };
   };
-
-  fetchData();
-}, []);
-
-
-
-const parseGPSData = (loraData) => {
-  const gpsIndex = loraData.indexOf("GPS Data:");
-  if (gpsIndex !== -1) {
-    const gpsString = loraData.substring(gpsIndex + 10).trim();
-    const [latitude, longitude, datetime] = gpsString.split(",");
-    const parsedDate = new Date(datetime).toLocaleString(); 
-    return { latitude, longitude, datetime: parsedDate };
-  }
-  return { latitude: "NaN", longitude: "NaN", datetime: "Invalid" };
-};
-
-
 
   useEffect(() => {
     if (!mapInitialized && sensorData.length > 0) {
@@ -93,19 +90,36 @@ const parseGPSData = (loraData) => {
     }
   }, [sensorData, mapInitialized]);
 
-  return (
-    <Row className="justify-content-md-center">
-      <div className="product-catagories-wrapper pt-3">
-        <Container>
-          <div className="product-catagory-wrap">
-            <Container>
-              <Card className="login">
-                <div id="map" style={{ height: "500px", width: "100%" }}></div>
-              </Card>
-            </Container>
-          </div>
-        </Container>
-      </div>
-    </Row>
-  );
+  const toggleFullScreen = () => {
+    const mapElement = document.getElementById("map");
+    if (!document.fullscreenElement) {
+      mapElement.requestFullscreen().catch((err) => {
+        console.error(
+          `errorrrrrrr ${err.message}`
+        );
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+return (
+  <Row className="justify-content-md-center">
+    <div className="product-catagories-wrapper pt-3">
+      <Container>
+        <div className="product-catagory-wrap">
+          <Container>
+            <Card className="login">
+              <div id="map" style={{ height: "300px", width: "100%" }}></div>
+              <div className="text-center mt-3">
+                <Button onClick={toggleFullScreen}>View on Fullscreen</Button> 
+              </div>
+            </Card>
+          </Container>
+        </div>
+      </Container>
+    </div>
+  </Row>
+);
+
 }
