@@ -5,7 +5,8 @@ import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen";
 import React, { useEffect, useState } from "react";
 import { Card, Container, Row } from "react-bootstrap";
-import blueMarkerIcon from "../assets/images.png";
+import IconPengirim from "../assets/images.png";
+import "../index.css";
 
 function Home() {
   return (
@@ -38,21 +39,6 @@ function DataTabel() {
       }
     };
 
-    fetchData();
-  }, []);
-
-  const parseGPSData = (loraData) => {
-    const gpsIndex = loraData.indexOf("GPS Data:");
-    if (gpsIndex !== -1) {
-      const gpsString = loraData.substring(gpsIndex + 10).trim();
-      const [latitude, longitude, datetime] = gpsString.split(",");
-      const parsedDate = new Date(datetime).toLocaleString();
-      return { latitude, longitude, datetime: parsedDate };
-    }
-    return { latitude: "NaN", longitude: "NaN", datetime: "Invalid" };
-  };
-
-  useEffect(() => {
     const openGoogleMaps = () => {
       const coords = getLatestCoordinates();
       if (coords) {
@@ -63,7 +49,7 @@ function DataTabel() {
         alert("No valid coordinates available");
       }
     };
-
+    
     const getLatestCoordinates = () => {
       if (sensorData.length > 0) {
         const latestData = sensorData[0];
@@ -75,69 +61,90 @@ function DataTabel() {
       return null;
     };
 
+    const parseGPSData = (loraData) => {
+      const gpsIndex = loraData.indexOf("GPS Data:");
+      if (gpsIndex !== -1) {
+        const gpsString = loraData.substring(gpsIndex + 10).trim();
+        const [latitude, longitude, datetime] = gpsString.split(",");
+        const parsedDate = new Date(datetime).toLocaleString();
+        return { latitude, longitude, datetime: parsedDate };
+      }
+      return { latitude: "NaN", longitude: "NaN", datetime: "Invalid" };
+    };
+
     if (!mapInitialized && sensorData.length > 0) {
-      const map = L.map("map").setView([-6.866059, 107.57455], 18);
+      const coords = getLatestCoordinates();
+      if (coords) {
+        const { latitude, longitude } = coords;
+        const map = L.map("map").setView([latitude, longitude], 18);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors",
-        maxZoom: 30,
-      }).addTo(map);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+          maxZoom: 30,
+        }).addTo(map);
 
-      L.control.fullscreen({
-        position: 'topleft',
-        title: 'Show me the fullscreen!',
-        titleCancel: 'Exit fullscreen mode',
-        forceSeparateButton: true,
-        forcePseudoFullscreen: true,
-      }).addTo(map);
+        L.control.fullscreen({
+          position: 'topleft',
+          title: 'Show me the fullscreen!',
+          titleCancel: 'Exit fullscreen mode',
+          forceSeparateButton: true,
+          forcePseudoFullscreen: true,
+        }).addTo(map);
 
-      map.on('enterFullscreen', function () {
-        console.log('entered fullscreen');
-      });
+        map.on('enterFullscreen', function () {
+          console.log('entered fullscreen');
+        });
 
-      map.on('exitFullscreen', function () {
-        console.log('exited fullscreen');
-      });
+        map.on('exitFullscreen', function () {
+          console.log('exited fullscreen');
+        });
 
-      const blueIcon = L.icon({
-        iconUrl: blueMarkerIcon,
-        iconSize: [50, 50],
-        iconAnchor: [25, 37],
-        popupAnchor: [5, -34],
-      });
+        const customIcon = L.icon({
+          iconUrl: IconPengirim,
+          iconSize: [50, 50],
+          iconAnchor: [25, 37],
+          popupAnchor: [5, -34],
+        });
 
-      sensorData.forEach((data) => {
-        const gps = parseGPSData(data.loraData);
-        if (!isNaN(parseFloat(gps.latitude)) && !isNaN(parseFloat(gps.longitude))) {
-          const marker = L.marker(
-            [parseFloat(gps.latitude), parseFloat(gps.longitude)],
-            { icon: blueIcon }
-          ).addTo(map);
+        sensorData.forEach((data) => {
+          const gps = parseGPSData(data.loraData);
+          if (!isNaN(parseFloat(gps.latitude)) && !isNaN(parseFloat(gps.longitude))) {
+            const marker = L.marker(
+              [parseFloat(gps.latitude), parseFloat(gps.longitude)],
+              { icon: customIcon }
+            ).addTo(map);
 
-          marker.bindPopup(
-            `Latitude: ${gps.latitude}<br>Longitude: ${gps.longitude}<br>Date & Time: ${new Date(data.createdAt).toLocaleString()}`
-          );
-        }
-      });
+            marker.bindPopup(
+              `Latitude: ${gps.latitude}<br>Longitude: ${gps.longitude}<br>Date & Time: ${new Date(data.createdAt).toLocaleString()}`
+            );
+          }
+        });
 
-      const customControl = L.Control.extend({
-        options: { position: 'bottomleft' },
-        onAdd: function () {
-          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-          container.innerHTML = '<button class="btn btn-primary btn-sm">Rute</button>';
+        const customControl = L.Control.extend({
+          options: { position: 'bottomleft' },
+          onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+            container.innerHTML = '<button class="btn btn-primary btn-sm">Rute</button>';
 
-          container.onclick = function () {
-            openGoogleMaps();
-          };
+            container.onclick = function () {
+              openGoogleMaps();
+            };
 
-          return container;
-        }
-      });
+            return container;
+          }
+        });
 
-      map.addControl(new customControl());
-      map.setMaxZoom(20);
-      setMapInitialized(true);
+        map.addControl(new customControl());
+        map.setMaxZoom(20);
+        setMapInitialized(true);
+      }
     }
+    
+    fetchData();
+
+    const interval = setInterval(fetchData, 1000); // Polling every 1 second
+
+    return () => clearInterval(interval);
   }, [sensorData, mapInitialized]);
 
   return (
