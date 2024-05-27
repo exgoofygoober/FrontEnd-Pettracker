@@ -29,7 +29,7 @@ function DataTabel() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-pettracker.vercel.app/lora/limitLora?limit=2"
+          "https://backend-pettracker.vercel.app/lora/limitLora?limit=1"
         );
         setSensorData(response.data);
         console.log("Total data yang terambil:", response.data.length);
