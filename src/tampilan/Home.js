@@ -34,7 +34,7 @@ function DataTabel() {
   const fetchData = async (page) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/lora/pageLora?limit=1&page=${page}`
+        `https://frontend-pettracker.vercel.app/lora/pageLora?limit=1&page=${page}`
       );
       if (response.data.length > 0) {
         setSensorData((prevData) => [...prevData, ...response.data]);
@@ -216,7 +216,7 @@ function DataTabel() {
   const sendMarkerToBackend = async (latlng) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/marker/addMarkers",
+        "https://frontend-pettracker.vercel.app/marker/addMarkers",
         latlng
       );
       Swal.fire({
