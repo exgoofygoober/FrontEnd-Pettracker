@@ -74,3 +74,18 @@ select {
   color: white;
   border: none;
 }
+
+#sendMarkerBtn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#sendMarkerBtn:hover {
+  background-color: #0056b3;
+}

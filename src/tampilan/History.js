@@ -18,14 +18,13 @@ export default History;
 export function DataTabel() {
   const [sensorData, setSensorData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [markersData, setMarkersData] = useState([]);
   const [dataPerPage] = useState(25);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          "https://backend-pettracker.vercel.app/lora/dataLora"
-        );
+        const response = await axios.get("http://localhost:5000/lora/dataLora");
         setSensorData(response.data);
       } catch (error) {
         console.error("Error fetching sensor data:", error);
@@ -35,11 +34,53 @@ export function DataTabel() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchMarkers = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/marker/getLatestMarker"
+        );
+        setMarkersData([response.data]);
+      } catch (error) {
+        console.error("Error fetching markers data:", error);
+      }
+    };
+
+    fetchMarkers();
+  }, []);
+
   const indexOfLastData = currentPage * dataPerPage;
   const indexOfFirstData = indexOfLastData - dataPerPage;
   const currentData = sensorData.slice(indexOfFirstData, indexOfLastData);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  function derajat(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  function hitungJarak(lat1, lon1, lat2, lon2) {
+    const earthRadiusKm = 6371;
+
+    const dLat = derajat(lat2 - lat1);
+    const dLon = derajat(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(derajat(lat1)) *
+        Math.cos(derajat(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = earthRadiusKm * c;
+
+    return distance;
+  }
+
+  const markerLat =
+    markersData.length > 0 ? markersData.map((marker) => marker.latitude) : [];
+  const markerLon =
+    markersData.length > 0 ? markersData.map((marker) => marker.longitude) : [];
 
   return (
     <Row className="justify-content-md-center">
@@ -56,6 +97,7 @@ export function DataTabel() {
                       <th scope="col">Latitude</th>
                       <th scope="col">Longitude</th>
                       <th scope="col">RSSI</th>
+                      <th scope="col">Jarak</th>
                       <th scope="col">Tanggal</th>
                     </tr>
                   </thead>
@@ -74,6 +116,20 @@ export function DataTabel() {
                         <td>{getLatitude(data)}</td>
                         <td>{getLongitude(data)}</td>
                         <td>{data.rssiString}</td>
+                        <td>
+                          {getLatitude(data) &&
+                          getLongitude(data) &&
+                          markerLat.length > 0 &&
+                          markerLon.length > 0
+                            ? hitungJarak(
+                                getLatitude(data),
+                                getLongitude(data),
+                                markerLat[0],
+                                markerLon[0]
+                              ).toFixed(2) + " KM"
+                            : "n/a"}
+                        </td>
+
                         <td>{new Date(data.createdAt).toLocaleString()}</td>
                       </tr>
                     ))}
@@ -90,17 +146,49 @@ export function DataTabel() {
           </div>
         </Container>
       </div>
+      <div className="product-catagories-wrapper pt-3">
+        <Container>
+          <div className="product-catagory-wrap">
+            <Container>
+              <Card className="mb-3 catagory-card">
+                <h3 className="judul text-center">Data Marker</h3>
+                <Table responsive bordered>
+                  <thead>
+                    <tr>
+                      <th scope="col">No</th>
+                      <th scope="col">Latitude</th>
+                      <th scope="col">Longitude</th>
+                      <th scope="col">Tanggal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {markersData.map((marker, index) => (
+                      <tr key={index}>
+                        <td>{index + 1}</td>
+                        <td>{marker.latitude}</td>
+                        <td>{marker.longitude}</td>
+                        <td>{new Date(marker.createdAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </Card>
+            </Container>
+          </div>
+        </Container>
+      </div>
     </Row>
   );
 }
 
 function getLatitude(data) {
   if (data.loraData && data.loraData.includes("GPS Data:")) {
-    return data.loraData
+    const lat = data.loraData
       .split("GPS Data:")[1]
-      .split(",")[0]
-      .trim()
-      .replace(/,/g, "");
+      ?.split(",")[0]
+      ?.trim()
+      ?.replace(/,/g, "");
+    return lat ? parseFloat(lat) : "";
   } else {
     return "";
   }
@@ -108,11 +196,12 @@ function getLatitude(data) {
 
 function getLongitude(data) {
   if (data.loraData && data.loraData.includes("GPS Data:")) {
-    return data.loraData
+    const lon = data.loraData
       .split("GPS Data:")[1]
-      .split(",")[1]
-      .trim()
-      .replace(/,/g, "");
+      ?.split(",")[1]
+      ?.trim()
+      ?.replace(/,/g, "");
+    return lon ? parseFloat(lon) : "";
   } else {
     return "";
   }
