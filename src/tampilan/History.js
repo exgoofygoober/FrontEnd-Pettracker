@@ -24,7 +24,7 @@ export function DataTabel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/lora/dataLora");
+        const response = await axios.get("https://frontend-pettracker.vercel.app/lora/dataLora");
         setSensorData(response.data);
       } catch (error) {
         console.error("Error fetching sensor data:", error);
@@ -38,7 +38,7 @@ export function DataTabel() {
     const fetchMarkers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/marker/getLatestMarker"
+          "https://frontend-pettracker.vercel.app/marker/getLatestMarker"
         );
         setMarkersData([response.data]);
       } catch (error) {
