@@ -98,7 +98,7 @@ function DataTabel() {
 
     const interval = setInterval(() => {
       setCurrentPage((prevPage) => prevPage + 1);
-    }, 1000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
