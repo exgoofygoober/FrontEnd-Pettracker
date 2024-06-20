@@ -34,11 +34,12 @@ function DataTabel() {
   const fetchData = async (page) => {
     try {
       const response = await axios.get(
-        `https://backend-pettracker.vercel.app/lora/pageLora?limit=1&page=${page}`
+        `https://backend-pettracker.vercel.app/lora/pageLora?limit=1&page=0`
       );
       if (response.data.length > 0) {
         setSensorData((prevData) => [...prevData, ...response.data]);
       }
+      console.log(response);
     } catch (error) {
       console.error("Error fetching sensor data:", error);
     }
@@ -97,7 +98,7 @@ function DataTabel() {
 
     const interval = setInterval(() => {
       setCurrentPage((prevPage) => prevPage + 1);
-    }, 10000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
